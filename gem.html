@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로스트아크 보석 합성 계산기</title>
+    <style>
+        :root {
+            --bg-color: #1c1e22;
+            --container-bg: #282b30;
+            --text-color: #ffffff;
+            --accent-color: #e19c16;
+            --border-color: #3e4249;
+            --input-bg: #181a1d;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            font-size: 24px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background: var(--input-bg);
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group label {
+            flex: 1;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .input-group input {
+            width: 100px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            text-align: right;
+            outline: none;
+        }
+
+        .input-group span {
+            margin-left: 10px;
+            color: #888;
+            font-size: 14px;
+            width: 30px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #c7850e;
+        }
+
+        .result-box {
+            margin-top: 25px;
+            background: var(--input-bg);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .result-title {
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 5px;
+            border-bottom: 1px dashed #333;
+            font-size: 15px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .gem-lv {
+            font-weight: bold;
+        }
+
+        .gem-count {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .gem-remain {
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💎 로아 보석 합성 계산기</h1>
+    
+    <div id="inputs">
+        <div class="input-group">
+            <label>1레벨 보석</label>
+            <input type="number" id="lv1" min="0" value="0" oninput="calculateGems()">
+            <span>개</span>
+        </div>
+        <div class="input-group">
+            <label>2레벨 보석</label>
+            <input type="number" id="lv2" min="0" value="0" oninput="calculateGems()">
+            <span>개</span>
+        </div>
+        <div class="input-check">
+            </div>
+    </div>
+
+    <script>
+        const inputsDiv = document.getElementById('inputs');
+        inputsDiv.innerHTML = '';
+        for(let i=1; i<=9; i++) {
+            inputsDiv.innerHTML += `
+                <div class="input-group">
+                    <label>${i}레벨 보석 상자/보석</label>
+                    <input type="number" id="lv${i}" min="0" value="0" oninput="calculateGems()">
+                    <span>개</span>
+                </div>
+            `;
+        }
+
+        function calculateGems() {
+            // 각 레벨별 보석 개수 가져오기
+            let gems = Array(11).fill(0);
+            for(let i=1; i<=9; i++) {
+                gems[i] = parseInt(document.getElementById(`lv${i}`).value) || 0;
+            }
+
+            // 하위 레벨부터 상위 레벨로 합성 계산 (3개당 다음 레벨 1개)
+            for(let i=1; i<=9; i++) {
+                let nextLevelGems = Math.floor(gems[i] / 3);
+                gems[i+1] += nextLevelGems;
+                gems[i] = gems[i] % 3; // 합성하고 남은 보석
+            }
+
+            // 결과 화면에 반영
+            let html = '';
+            let hasResult = false;
+
+            for(let i=10; i>=1; i--) {
+                if(gems[i] > 0 || hasResult) {
+                    hasResult = true; // 최고 레벨 이후로는 0개라도 표시해서 잔여 보석 확인
+                    
+                    let label = `${i}레벨 보석`;
+                    if(i === 10) label = `🔥 10레벨 보석 (겁/작)`;
+                    
+                    html += `
+                        <div class="result-item">
+                            <span class="gem-lv">${label}</span>
+                            <span>
+                                <span class="gem-count">${gems[i]}개</span>
+                                ${i < 10 && gems[i] > 0 ? `<span class="gem-remain">(남음)</span>` : ''}
+                            </span>
+                        </div>
+                    `;
+                }
+            }
+
+            if(!hasResult) {
+                html = '<div style="text-align:center; color:#888;">보석 개수를 입력해주세요.</div>';
+            }
+
+            document.getElementById('result-display').innerHTML = html;
+        }
+    </script>
+
+    <div class="result-box">
+        <div class="result-title">⚡ 합성 예측 결과</div>
+        <div id="result-display">
+            <div style="text-align:center; color:#888;">보석 개수를 입력해주세요.</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
